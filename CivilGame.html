@@ -62,7 +62,8 @@ let target = null;
 const speed = 5;
 
 const sol = { x:1000, y:1000, size:500, color:'#006400' };
-let viewport = { width:600, height:600, x:sol.x+sol.size/2-300, y:sol.y+sol.size/2-300 };
+let viewport = { width:600, height:600, x: point.x - 600/2,
+  y: point.y - 600/2 };
 
 const ZOOM_FACTOR = 1.2;
 const MIN_VIEW = 100;
