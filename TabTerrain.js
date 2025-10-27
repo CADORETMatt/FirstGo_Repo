@@ -12,18 +12,18 @@ function createNewTerrain(terrainStatut) {
 //Construction Object
         function batiment(name,place,color,statut){
             this.nomBat=name;
-            this.placeBat=place;
+            this.placeBat=place;  // [x1, y1, x2, y2]
             this.colorBat=color;
             this.statutBat=statut;
             this.integrer=function(){
-                for (let x = this.placeBat[1]; x <= this.placeBat[3]; x++) {
-                    for (let y = this.placeBat[2]; y<=this.placeBat[4]; y++) {
+                for (let x = this.placeBat[0]; x <= this.placeBat[2]; x++) {
+                    for (let y = this.placeBat[1]; y<=this.placeBat[3]; y++) {
                         terrainGrid[x][y] = this;
                     }
-                }       ERREUR COORD.[0] !
+                }      
             }
         }
-        let mairie=new batiment("Mairie",[25,25,26,26],"blue",true);
+        let mairie=new batiment("Grotte",[25,25,26,26],"grey",true);
 /*
 // Placement de la Mairie au centre (2x2)
         const center = sol.GRID_SIZE / 2; // = 5
