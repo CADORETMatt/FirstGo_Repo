@@ -1,3 +1,3 @@
 git add .
-git commit 
+git commit -m "Commit auto" || echo "Rien à committer"
 git push
