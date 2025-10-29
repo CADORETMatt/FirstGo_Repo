@@ -1,46 +1,46 @@
 let terrainStatut = "master";
 //const ;
-const sol = {size : 500, GRID_SIZE : 50};
+const sol = { size: 500, GRID_SIZE: 50 };
 
 function createNewTerrain(terrainStatut) {
-    if (terrainStatut == "master") {
-       // const terrainPos = //0 ou 1 ?
-// === Terrain de départ ===
-        const CELL_SIZE = sol.size / sol.GRID_SIZE;
-// Création d'un tableau 50x50 rempli de null (cases vides)
-        const terrainGrid = Array.from({ length: sol.GRID_SIZE }, () => Array(sol.GRID_SIZE).fill(null));
-//Construction Object
-        function batiment(name,place,color,statut){
-            this.nomBat=name;
-            this.placeBat=place;  // [x1, y1, x2, y2]
-            this.colorBat=color;
-            this.statutBat=statut;
-            this.integrer=function(){
-                for (let x = this.placeBat[0]; x <= this.placeBat[2]; x++) {
-                    for (let y = this.placeBat[1]; y<=this.placeBat[3]; y++) {
-                        terrainGrid[x][y] = this;
-                    }
-                }      
-            }
-        }
-        let mairie=new batiment("Grotte",[25,25,26,26],"grey",true);
-/*
-// Placement de la Mairie au centre (2x2)
-        const center = sol.GRID_SIZE / 2; // = 5
-        terrainGrid[center - 1][center - 1] = "Mairie";
-        terrainGrid[center][center - 1] = "Mairie";
-        terrainGrid[center - 1][center] = "Mairie";
-        terrainGrid[center][center] = "Mairie";
-
-        terrainGrid[1][1] = {bat:'mine', active:'true'};
-*/
-console.log (terrainGrid);
-console.log (terrainGrid[1][1].bat)
-    return { terrainGrid, CELL_SIZE };
+  if (terrainStatut == "master") {
+    // === Terrain de départ ===
+    const CELL_SIZE = sol.size / sol.GRID_SIZE;
+    // Création d'un tableau 50x50 rempli de null (cases vides)
+    const terrainGrid = Array.from({ length: sol.GRID_SIZE }, () => Array(sol.GRID_SIZE).fill(null));
+    //Construction Object
+    function batiment(name, place, color, statut) {
+      this.nomBat = name;
+      this.placeBat = place;  // [x1, y1, x2, y2]
+      this.colorBat = color;
+      this.statutBat = statut;
+      //this.integrer=function(){       }
     }
+    let centre = new batiment("Grotte", [25, 25, 26, 26], "grey", true);
+
+    for (let x = centre.placeBat[0]; x <= centre.placeBat[2]; x++) {
+      for (let y = centre.placeBat[1]; y <= centre.placeBat[3]; y++) {
+        terrainGrid[x][y] = centre;
+      }
+    }
+    /*
+// Placement de la Mairie au centre (2x2)
+    const center = sol.GRID_SIZE / 2; // = 5
+    terrainGrid[center - 1][center - 1] = "Mairie";
+    terrainGrid[center][center - 1] = "Mairie";
+    terrainGrid[center - 1][center] = "Mairie";
+    terrainGrid[center][center] = "Mairie";
+
+    terrainGrid[1][1] = {bat:'mine', active:'true'};
+*/
+    //console.log (terrainGrid);
+    return { terrainGrid, CELL_SIZE };
+  }
 }
 
-console.log (createNewTerrain('master'));
+let { terrainGrid, CELL_SIZE } = createNewTerrain('master');
+console.log(terrainGrid[25][25].nomBat);
+console.log(CELL_SIZE);
 
 // Dessin du sol
 /*
