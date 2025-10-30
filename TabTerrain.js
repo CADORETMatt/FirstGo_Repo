@@ -1,13 +1,13 @@
 let terrainStatut = "master";
 //const ;
-const sol = { size: 500, GRID_SIZE: 50 };
+const solData = { size: 500, GRID_SIZE: 50 };
 
 function createNewTerrain(terrainStatut) {
   if (terrainStatut == "master") {
     // === Terrain de départ ===
-    const CELL_SIZE = sol.size / sol.GRID_SIZE;
+    const CELL_SIZE = solData.size / solData.GRID_SIZE;
     // Création d'un tableau 50x50 rempli de null (cases vides)
-    const terrainGrid = Array.from({ length: sol.GRID_SIZE }, () => Array(sol.GRID_SIZE).fill(null));
+    const terrainGrid = Array.from({ length: solData.GRID_SIZE }, () => Array(solData.GRID_SIZE).fill(null));
     //Construction Object
     function batiment(name, place, color, statut) {
       this.nomBat = name;
