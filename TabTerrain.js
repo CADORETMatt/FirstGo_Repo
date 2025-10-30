@@ -1,5 +1,3 @@
-let terrainStatut = "master";
-//const ;
 const solData = { size: 500, GRID_SIZE: 50 };
 
 function createNewTerrain(terrainStatut) {
@@ -38,7 +36,7 @@ function createNewTerrain(terrainStatut) {
   }
 }
 
-let { terrainGrid, CELL_SIZE } = createNewTerrain('master');
+// let { terrainGrid, CELL_SIZE } = createNewTerrain('master');
 console.log(terrainGrid[25][25].nomBat);
 console.log(CELL_SIZE);
 

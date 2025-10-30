@@ -1,39 +1,20 @@
-<!--
-
-Crée une page HTML complète en français contenant un canvas interactif qui affiche un carré rouge se déplaçant dans une zone de jeu verte.
-Le canvas mesure 2500×2500 en interne, mais s’adapte à la fenêtre tout en gardant le bon ratio.
-L’utilisateur peut déplacer le carré rouge :
-soit avec les touches Z, Q, S, D,
-soit en cliquant ou touchant un point dans la zone verte (le carré se déplace automatiquement vers cette cible).
-Le carré ne doit pas sortir de la zone verte.
-Le canvas suit automatiquement le carré (centrage automatique de la vue).
-Ajoute un HUD avec seulement deux boutons :
-“+” pour zoomer,
-“-” pour dézoomer.
-
--->
-
 <!DOCTYPE html>
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Canvas Interactif avec Suivi</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Canvas Interactif - Exemple Complet</title>
   <style>
     html,
     body {
       margin: 0;
-      padding: 0;
       height: 100%;
-      width: 100%;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       background: #f0f0f0;
       overflow: hidden;
-      user-select: none;
-      -webkit-user-select: none;
     }
 
     #canvasWrap {
@@ -68,7 +49,6 @@ Ajoute un HUD avec seulement deux boutons :
       left: 10px;
       display: flex;
       gap: 6px;
-      flex-wrap: wrap;
       z-index: 30;
     }
 
@@ -79,7 +59,6 @@ Ajoute un HUD avec seulement deux boutons :
       border: 1px solid rgba(0, 0, 0, 0.12);
       border-radius: 6px;
       padding: 6px 8px;
-      /*display: none;  Affichage position */
     }
   </style>
 </head>
@@ -89,39 +68,19 @@ Ajoute un HUD avec seulement deux boutons :
     <div id="hudContainer">
       <button class="hud-btn" id="zoomIn"> + </button>
       <button class="hud-btn" id="zoomOut"> - </button>
-
       <div id="playerPos">x: 0, y: 0</div>
-
     </div>
     <canvas id="gameCanvas" width="2500" height="2500" aria-label="Zone de jeu"></canvas>
   </div>
 
-  <script src=TabTerrain.js></script>
+  <script src="TabTerrain.js"></script>
+
   <script>
-    // === Configuration ===
-    const WORLD_SIZE = { w: 2500, h: 2500 };
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const posHUD = document.getElementById('playerPos');
-
-
-    let point = { x: 1250, y: 1250, size: 10 };
-    let target = null;
-    const speed = 5;
-
-    const sol = { x: 1000, y: 1000, size: 500, color: '#006400' };
-    let viewport = { width: 600, height: 600, x: sol.x + sol.size / 2 - 300, y: sol.y + sol.size / 2 - 300 };
-
-    const ZOOM_FACTOR = 1.2;
-    const MIN_VIEW = 100;
-    const MAX_VIEW = WORLD_SIZE.w;
-
-    const keys = {};
-    document.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; e.preventDefault(); });
-    document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-
-    // Resize canvas pour garder le ratio
-    function resizeCanvasToWindow() {
+    /* ---------------------------
+       DeclaFunct.js (déclarations)
+       --------------------------- */
+    /* Ces fonctions ne s'exécutent pas tant qu'on ne les appelle pas depuis init(...) */
+    function resizeCanvasToWindow(viewport, canvas) {
       const maxW = window.innerWidth, maxH = window.innerHeight;
       const ratio = viewport.width / viewport.height;
       let displayW = maxW, displayH = displayW / ratio;
@@ -129,30 +88,26 @@ Ajoute un HUD avec seulement deux boutons :
       canvas.style.width = Math.round(displayW) + 'px';
       canvas.style.height = Math.round(displayH) + 'px';
     }
-    window.addEventListener('resize', resizeCanvasToWindow);
-    resizeCanvasToWindow();
 
-    // Convertit clic/touch en coord monde
-    function cssPointToWorld(clientX, clientY) {
+    function cssPointToWorld(clientX, clientY, viewport, canvas) {
       const rect = canvas.getBoundingClientRect();
       const nx = (clientX - rect.left) / rect.width;
       const ny = (clientY - rect.top) / rect.height;
       return { x: viewport.x + nx * viewport.width, y: viewport.y + ny * viewport.height };
     }
 
-    // Pointer pour déplacer le point
-    function onPointerDown(e) {
-      const p = e.touches ? e.touches[0] : e;
-      const w = cssPointToWorld(p.clientX, p.clientY);
-      if (w.x >= sol.x && w.x <= sol.x + sol.size && w.y >= sol.y && w.y <= sol.y + sol.size) {
-        target = { x: w.x, y: w.y };
-      }
+    function makeOnPointerDown(sol, viewport, canvas, setTargetFn) {
+      // Factory qui retourne un handler sans capturer d'autres globals
+      return function onPointerDown(e) {
+        const p = e.touches ? e.touches[0] : e;
+        const w = cssPointToWorld(p.clientX, p.clientY, viewport, canvas);
+        if (w.x >= sol.x && w.x <= sol.x + sol.size && w.y >= sol.y && w.y <= sol.y + sol.size) {
+          setTargetFn({ x: w.x, y: w.y });
+        }
+      };
     }
-    canvas.addEventListener('mousedown', onPointerDown);
-    canvas.addEventListener('touchstart', onPointerDown, { passive: true });
 
-    // Déplacement clavier
-    function handleKeyboardMovement() {
+    function handleKeyboardMovement(point, keys, speed, sol) {
       let dx = 0, dy = 0;
       if (keys['z']) dy -= speed;
       if (keys['s']) dy += speed;
@@ -166,50 +121,8 @@ Ajoute un HUD avec seulement deux boutons :
       }
     }
 
-    // Mise à jour vers la cible
-    function updateTarget() {
-      if (!target) return;
-      const dx = target.x - point.x, dy = target.y - point.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < speed) { point.x = target.x; point.y = target.y; target = null; return; }
-      const nx = point.x + (dx / dist) * speed;
-      const ny = point.y + (dy / dist) * speed;
-      if (nx < sol.x || nx > sol.x + sol.size || ny < sol.y || ny > sol.y + sol.size) { target = null; return; }
-      point.x = nx; point.y = ny;
-    }
-
-    // Dessin
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const sx = canvas.width / viewport.width;
-      const sy = canvas.height / viewport.height;
-      ctx.save();
-      ctx.scale(sx, sy);
-      ctx.translate(-viewport.x, -viewport.y);
-
-      ctx.fillStyle = sol.color;
-      ctx.fillRect(sol.x, sol.y, sol.size, sol.size);
-
-      ctx.fillStyle = 'red';
-      const s = point.size;
-      ctx.fillRect(point.x - s / 2, point.y - s / 2, s, s);
-
-      if (target) {
-        ctx.strokeStyle = 'blue';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(target.x - 5, target.y - 5, 10, 10);
-      }
-      ctx.restore();
-    }
-
-    // Clamp viewport et suivi automatique
-    function clampViewport() {
-      if (viewport.x < 0) viewport.x = 0;
-      if (viewport.y < 0) viewport.y = 0;
-      if (viewport.x + viewport.width > WORLD_SIZE.w) viewport.x = WORLD_SIZE.w - viewport.width;
-      if (viewport.y + viewport.height > WORLD_SIZE.h) viewport.y = WORLD_SIZE.h - viewport.height;
-
-      // Centrage automatique autour du point
+    function clampViewport(viewport, point, WORLD_SIZE) {
+      // center then clamp
       viewport.x = point.x - viewport.width / 2;
       viewport.y = point.y - viewport.height / 2;
       if (viewport.x < 0) viewport.x = 0;
@@ -218,41 +131,126 @@ Ajoute un HUD avec seulement deux boutons :
       if (viewport.y + viewport.height > WORLD_SIZE.h) viewport.y = WORLD_SIZE.h - viewport.height;
     }
 
-    // Mise à jour du HUD (position du joueur)
-    function updateHUD() {
+    function updateHUD(posHUD, point) {
       posHUD.textContent = `x: ${point.x.toFixed(1)}, y: ${point.y.toFixed(1)}`;
     }
 
-    // Boucle principale
-    function gameLoop() {
-      handleKeyboardMovement();
-      updateTarget();
-      clampViewport();
-      draw();
-      updateHUD();
-      requestAnimationFrame(gameLoop);
-    }
-    requestAnimationFrame(gameLoop);
-
-    // HUD zoom uniquement
-    function zoom(factor) {
+    function zoomViewport(factor, viewport, MIN_VIEW, MAX_VIEW) {
       const newW = Math.max(MIN_VIEW, Math.min(MAX_VIEW, viewport.width / factor));
       const newH = Math.max(MIN_VIEW, Math.min(MAX_VIEW, viewport.height / factor));
-      const cx = viewport.x + viewport.width / 2, cy = viewport.y + viewport.height / 2;
+      const cx = viewport.x + viewport.width / 2;
+      const cy = viewport.y + viewport.height / 2;
       viewport.width = newW; viewport.height = newH;
       viewport.x = cx - viewport.width / 2; viewport.y = cy - viewport.height / 2;
-      resizeCanvasToWindow();
     }
-    document.getElementById('zoomIn').addEventListener('click', () => zoom(ZOOM_FACTOR));
-    document.getElementById('zoomOut').addEventListener('click', () => zoom(1 / ZOOM_FACTOR));
 
-    // Empêche double-tap zoom mobile
-    let lastTouch = 0;
-    canvas.addEventListener('touchend', e => {
-      const t = Date.now();
-      if (t - lastTouch < 300) e.preventDefault();
-      lastTouch = t;
-    }, { passive: false });
+    /* Prevent double tap helper (returns a function to attach) */
+    function attachPreventDoubleTap(canvas) {
+      let lastTouch = 0;
+      const handler = e => {
+        const t = Date.now();
+        if (t - lastTouch < 300) e.preventDefault();
+        lastTouch = t;
+      };
+      canvas.addEventListener('touchend', handler, { passive: false });
+      return () => canvas.removeEventListener('touchend', handler); // cleanup if needed
+    }
+
+    /* ---------------------------
+       Code principal (initialisation)
+       --------------------------- */
+    (function main() {
+      // constantes / état
+      const WORLD_SIZE = { w: 2500, h: 2500 };
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const posHUD = document.getElementById('playerPos');
+
+      let point = { x: 1250, y: 1250, size: 10 };
+      let target = null;
+      const speed = 5;
+
+      const sol = { x: 1000, y: 1000, size: 500, color: '#006400' };
+      let viewport = { width: 600, height: 600, x: point.x - 600 / 2, y: point.y - 600 / 2 };
+
+      const ZOOM_FACTOR = 1.2;
+      const MIN_VIEW = 100;
+      const MAX_VIEW = WORLD_SIZE.w;
+
+      const keys = {};
+
+      // terrain initialisé depuis TabTerrain.js
+      let { terrainGrid, CELL_SIZE } = createNewTerrain('master');
+      // (Test console)
+      console.log('terrainGrid[25][25].nomBat =>', terrainGrid && terrainGrid[25] && terrainGrid[25][25] && terrainGrid[25][25].nomBat);
+      console.log('CELL_SIZE =>', CELL_SIZE);
+
+      // Fonctions draw et updateTarget (utilisent l'état local)
+      function updateTargetLocal() {
+        if (!target) return;
+        const dx = target.x - point.x, dy = target.y - point.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < speed) { point.x = target.x; point.y = target.y; target = null; return; }
+        const nx = point.x + (dx / dist) * speed;
+        const ny = point.y + (dy / dist) * speed;
+        if (nx < sol.x || nx > sol.x + sol.size || ny < sol.y || ny > sol.y + sol.size) { target = null; return; }
+        point.x = nx; point.y = ny;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const sx = canvas.width / viewport.width;
+        const sy = canvas.height / viewport.height;
+        ctx.save();
+        ctx.scale(sx, sy);
+        ctx.translate(-viewport.x, -viewport.y);
+
+        ctx.fillStyle = sol.color;
+        ctx.fillRect(sol.x, sol.y, sol.size, sol.size);
+
+        ctx.fillStyle = 'red';
+        const s = point.size;
+        ctx.fillRect(point.x - s / 2, point.y - s / 2, s, s);
+
+        if (target) {
+          ctx.strokeStyle = 'blue';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(target.x - 5, target.y - 5, 10, 10);
+        }
+        ctx.restore();
+      }
+
+      // Hook up events AFTER everything exists
+      window.addEventListener('resize', () => resizeCanvasToWindow(viewport, canvas));
+      resizeCanvasToWindow(viewport, canvas);
+
+      document.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; e.preventDefault(); });
+      document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+      // pointer handling: create handler with closure that sets `target`
+      const onPointerDown = makeOnPointerDown(sol, viewport, canvas, t => target = t);
+      canvas.addEventListener('mousedown', onPointerDown);
+      canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+
+      // zoom buttons
+      document.getElementById('zoomIn').addEventListener('click', () => { zoomViewport(ZOOM_FACTOR, viewport, MIN_VIEW, MAX_VIEW); resizeCanvasToWindow(viewport, canvas); });
+      document.getElementById('zoomOut').addEventListener('click', () => { zoomViewport(1 / ZOOM_FACTOR, viewport, MIN_VIEW, MAX_VIEW); resizeCanvasToWindow(viewport, canvas); });
+
+      // prevent double tap
+      attachPreventDoubleTap(canvas);
+
+      // game loop
+      function gameLoop() {
+        handleKeyboardMovement(point, keys, speed, sol);
+        updateTargetLocal();
+        clampViewport(viewport, point, WORLD_SIZE);
+        draw();
+        updateHUD(posHUD, point);
+        requestAnimationFrame(gameLoop);
+      }
+      requestAnimationFrame(gameLoop);
+
+    })(); // fin main IIFE
 
   </script>
 </body>
