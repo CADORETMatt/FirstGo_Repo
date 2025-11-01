@@ -18,6 +18,20 @@ function cssPointToWorld(clientX, clientY) {
     return { x: viewport.x + nx * viewport.width, y: viewport.y + ny * viewport.height };
 }
 
+ /*   // Mise à jour vers la cible
+    function updateTarget() {
+      if (!target) return;
+      const dx = target.x - point.x, dy = target.y - point.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < speed) { point.x = target.x; point.y = target.y; target = null; return; }
+      const nx = point.x + (dx / dist) * speed;
+      const ny = point.y + (dy / dist) * speed;
+      if (nx < sol.x || nx > sol.x + sol.size || ny < sol.y || ny > sol.y + sol.size) { target = null; return; }
+      point.x = nx; point.y = ny;
+    }
+//*/
+
+
 // Pointer pour déplacer le point
 function onPointerDown(e) {
     const p = e.touches ? e.touches[0] : e;
@@ -26,8 +40,10 @@ function onPointerDown(e) {
         target = { x: w.x, y: w.y };
     }
 }
-canvas.addEventListener('mousedown', onPointerDown);
-canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+//canvas.addEventListener('mousedown', onPointerDown);
+//canvas.addEventListener('touchstart', onPointerDown, { passive: true });
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('click', onPointerDown);
 
 
 // Déplacement clavier
